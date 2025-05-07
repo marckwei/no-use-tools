@@ -91,3 +91,6 @@ docker build -t [IMAGE] .
 ```sh
 npx @modelcontextprotocol/inspector uv run mcp-yahoo-finance
 ```
+## Acknowledgements
+
+- Original project by [Max Scheijen](https://github.com/maxscheijen)
