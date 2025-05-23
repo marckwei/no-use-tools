@@ -1,10 +1,20 @@
 # MCP Yahoo Finance
 
+[![smithery badge](https://smithery.ai/badge/@marckwei/no-use-tools)](https://smithery.ai/server/@marckwei/no-use-tools)
+
 A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for Yahoo Finance interaction. This server provides tools to get pricing, company information and more.
 
 > Please note that `mcp-yahoo-finance` is currently in early development. The functionality and available tools are subject to change and expansion as I continue to develop and improve the server.
 
 ## Installation
+
+### Installing via Smithery
+
+To install Yahoo Finance Data Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@marckwei/no-use-tools):
+
+```bash
+npx -y @smithery/cli install @marckwei/no-use-tools --client claude
+```
 
 You don't need to manually install `mcp-yahoo-finance` if you use [`uv`](https://docs.astral.sh/uv/). We'll use [`uvx`](https://docs.astral.sh/uv/guides/tools/) to directly run `mcp-yahoo-finance`.
 
